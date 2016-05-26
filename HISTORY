@@ -1,0 +1,154 @@
+TAG: translationload-4-3-2-3
+DATE: 01/27/2010
+STAFF: sc
+CHANGES:
+1) Install.README - new
+2) some more comments
+
+TAG: translationload-4-3-2-2
+TAG: translationload-4-3-2-1
+DATE: 01/27/2010
+STAFF: sc
+CHANGES:
+1) Configuration.default - removed, it isn't being used
+2) config.default - 
+   a) renamed to config.template.
+   b)removed 'source ${TRANSLATIONLOAD}/Configuration'
+   because TRANSLATIONLOAD not yet defined until Configuration is 
+   sourced
+   c) added sourcing of ${MGICONFIG}/master.config.csh
+   d) added description of config variables
+3) translationload.csh - print the environment to the log
+
+TAG: translationload-3-5-1-7
+DATE: 10/03/2006
+STAFF: lec
+CHANGES:
+1) translationload.csh - corrected TRANSLOAD to TRANSLATIONLOAD
+
+TAG: translationload-3-5-1-6
+DATE: 10/03/2006
+STAFF: lec
+CHANGES:
+1) TR7894; mgiconfig
+
+TAG: translationload-3-5-1-5
+TAG: translationload-3-5-1-4
+TAG: translationload-3-5-1-3
+TAG: translationload-3-5-1-2
+TAG: translationload-3-5-1-1
+DATE: 09/28/2006
+STAFF: lec
+CHANGES:
+1) TR7894; mgiconfig
+
+TAG: translationload-3-4-4-1
+DATE: 04/07/2006
+STAFF: lec
+CHANGES:
+1) MGI 3.44 (TR 7379); branch tr7379 merge
+
+TAG: translationload-tr7379-1
+DATE: 03/21/2006
+STAFF: lec
+CHANGES:
+1) MGI 3.44 (TR 7379)
+
+TAG: translationload-tr7379-BP
+DATE: 03/21/2006
+STAFF: lec
+CHANGES:
+1) branch point tag for MGI 3.44 (TR 7379)
+
+TAG: translationload-3-4-0-3
+DATE: 10/07/2005
+STAFF: sc
+CHANGES:tr1560 SNP
+1) translationload.py - added optional outputdir parameter
+2) removed varClass.csh and fxnClass.csh
+
+TAG: translationload-3-4-0-2
+DATE: 10/03/2005
+STAFF: sc
+CHANGES:tr1560 SNP
+1) varClass.csh, fxnClass.csh updated dbutilities path
+
+TAG: translationload-3-4-0-1
+DATE: 09/08/2005
+STAFF: sc
+CHANGES:tr1560 SNP
+1) retag to reflect 3.4 release
+
+TAG: translationload-2-0-8
+DATE: 09/08/2005
+STAFF: sc
+CHANGES:tr1560 SNP
+1) translationload.py - updated log and bcp file path to be based
+   on full path to input file (was the current directory)
+
+TAG: translationload-2-0-7
+DATE: 09/08/2005
+STAFF: sc
+CHANGES:tr1560 SNP -added fxnClass and varClass translations
+
+TAG: translationload-2-0-6
+DATE: 03/16/2004
+STAFF: lec
+CHANGES: JSAM
+
+TAG: translationload-2-0-5
+TAG: translationload-2-0-4
+DATE: 03/05/2004
+STAFF: lec
+CHANGES: JSAM
+
+TAG: translationload-2-0-3
+DATE: 02/04/2004
+STAFF: lec
+CHANGES: JSAM
+
+TAG: translationload-2-0-2
+DATE: 02/03/2004
+STAFF: lec
+CHANGES: JSAM
+
+TAG: translationload-2-0-1
+DATE: 01/29/2004
+STAFF: lec
+CHANGES: JSAM
+
+TAG: translationload-2-0-0
+DATE: 01/28/2004
+STAFF: lec
+CHANGES: JSAM
+
+TAG: translationload-1-0-5
+DATE: 07/03/2003
+STAFF: lec
+CHANGES: current schema
+
+TAG: translationload-1-0-4
+DATE: 03/18/2003
+STAFF: lec
+CHANGES: SAO
+
+TAG: translationload-1-0-3
+DATE: 03/04/2003
+STAFF: lec
+CHANGES: SAO
+
+TAG: translationload-1-0-2
+DATE: 02/28/2003
+STAFF: lec
+CHANGES: SAO
+
+TAG: translationload-1-0-1
+DATE: 02/27/2003
+STAFF: lec
+CHANGES: SAO
+
+TAG: translationload-1-0-0
+DATE: 02/27/2003
+STAFF: lec
+CHANGES: New CVS repository
+

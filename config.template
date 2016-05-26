@@ -1,0 +1,47 @@
+#!/bin/csh -f
+
+#
+# configuration file template
+# cp config.template  yourconfig.config and 
+# replace '?' with values where applicable
+#
+
+if ( ${?MGICONFIG} == 0 ) then
+        setenv MGICONFIG /usr/local/mgi/live/mgiconfig
+endif
+
+source ${MGICONFIG}/master.config.csh
+
+# fullest, full, or preview - see translationload.py
+# for explanation
+setenv TRANSMODE	load
+
+# Output data directory, often a TR directory
+setenv TRANSDATADIR	?
+
+# user must create input, logs and output directories
+setenv TRANSINPUTFILE	${TRANSDATADIR}/input/?
+setenv TRANSLOG		${TRANSDATADIR}/logs/?
+setenv TRANSOUTPUTDIR	${TRANSDATADIR}/output
+
+# MGI_TranslationType.name
+setenv TRANSTYPENAME	? (e.g. "Cell Line")
+
+# ACC_MGIType.name of object we are translating to
+# ACC_MGIType.dbView must be defined, this view
+# is used to verify the object we are translating to
+setenv TRANSMGITYPE	? (e.g. "Vocabulary Term")
+
+# used only by genbankparse.py only, not required
+setenv TRANSPARSETYPE	? (e.g. "Library")
+
+# VOC_Vocab.name if we are translating to a vocabulary
+setenv VOCABNAME	? (e.g. "Cell Line")
+
+# list of characters to remove from a translation target 
+# before translation is applied, not required
+setenv TRANSCOMPRESSION ""
+
+# MGI_User.login of translation creator
+setenv CREATEDBY	? (e.g. "rmb" or "jsam_load")
+

@@ -1,0 +1,15 @@
+This product is typically used to load ad hoc translations
+As such the config file, input, and output are generally 
+stored in a TR directory
+
+To use:
+1. cp config.template to trDir/<myTranslation>.config
+2. edit config file, instructions in config.template
+   Note: The MGI Type in the config file must have a view. For example
+   when translating raw biotypes to MRK_Types objects we needed to
+   1. define a view mapping  the column 'description' to MRK_Types.name
+      translationload verifies the object we are translating to using
+      this view and expects a column named 'description
+   2. define new ACC_MGIType and set dbView column to name of the view
+3. create any needed subdirectories (like input, output, logs)
+4. run translationload: translationload.csh fullPathToConfigFile
