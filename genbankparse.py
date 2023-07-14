@@ -58,146 +58,146 @@ errorFileName = ''	# file name
 delim = '\t'
 
 def exit(status, message = None):
-	'''
-	# requires: status, the numeric exit status (integer)
-	#           message (string)
-	#
-	# effects:
-	# Print message to stderr and exits
-	#
-	# returns:
-	#
-	'''
+        '''
+        # requires: status, the numeric exit status (integer)
+        #           message (string)
+        #
+        # effects:
+        # Print message to stderr and exits
+        #
+        # returns:
+        #
+        '''
  
-	if message is not None:
-		sys.stderr.write('\n' + str(message) + '\n')
+        if message is not None:
+                sys.stderr.write('\n' + str(message) + '\n')
  
-	try:
-		inputFile.close()
-		outputFile.close()
-		diagFile.write('\n\nEnd Date/Time: %s\n' % (mgi_utils.date()))
-		errorFile.write('\n\nEnd Date/Time: %s\n' % (mgi_utils.date()))
-		diagFile.close()
-		errorFile.close()
-	except:
-		pass
+        try:
+                inputFile.close()
+                outputFile.close()
+                diagFile.write('\n\nEnd Date/Time: %s\n' % (mgi_utils.date()))
+                errorFile.write('\n\nEnd Date/Time: %s\n' % (mgi_utils.date()))
+                diagFile.close()
+                errorFile.close()
+        except:
+                pass
 
-	db.useOneConnection()
-	sys.exit(status)
+        db.useOneConnection()
+        sys.exit(status)
  
 def init():
-	'''
-	# requires: 
-	#
-	# effects: 
-	# 1. Processes command line options
-	# 2. Initializes local DBMS parameters
-	# 3. Initializes global file descriptors/file names
-	# 4. Initializes global keys
-	#
-	# returns:
-	#
-	'''
+        '''
+        # requires: 
+        #
+        # effects: 
+        # 1. Processes command line options
+        # 2. Initializes local DBMS parameters
+        # 3. Initializes global file descriptors/file names
+        # 4. Initializes global keys
+        #
+        # returns:
+        #
+        '''
  
-	global inputFile, outputFile, diagFile, errorFile, errorFileName, diagFileName
+        global inputFile, outputFile, diagFile, errorFile, errorFileName, diagFileName
  
-	db.useOneConnection(1)
+        db.useOneConnection(1)
         db.set_sqlUser(user)
         db.set_sqlPasswordFromFile(passwordFileName)
  
-	diagFileName = inputFileName + '.diagnostics'
-	errorFileName = inputFileName + '.error'
- 	outputFileName = inputFileName + '.trans'
+        diagFileName = inputFileName + '.diagnostics'
+        errorFileName = inputFileName + '.error'
+        outputFileName = inputFileName + '.trans'
 
-	try:
-		inputFile = open(inputFileName, 'r')
-	except:
-		exit(1, 'Could not open file %s\n' % inputFileName)
-		
-	try:
-		diagFile = open(diagFileName, 'w')
-	except:
-		exit(1, 'Could not open file %s\n' % diagFileName)
-		
-	try:
-		errorFile = open(errorFileName, 'w')
-	except:
-		exit(1, 'Could not open file %s\n' % errorFileName)
-		
-	try:
-		outputFile = open(outputFileName, 'w')
-	except:
-		exit(1, 'Could not open file %s\n' % outputFileName)
-		
-	# Log all SQL
-	db.set_sqlLogFunction(db.sqlLogAll)
+        try:
+                inputFile = open(inputFileName, 'r')
+        except:
+                exit(1, 'Could not open file %s\n' % inputFileName)
+                
+        try:
+                diagFile = open(diagFileName, 'w')
+        except:
+                exit(1, 'Could not open file %s\n' % diagFileName)
+                
+        try:
+                errorFile = open(errorFileName, 'w')
+        except:
+                exit(1, 'Could not open file %s\n' % errorFileName)
+                
+        try:
+                outputFile = open(outputFileName, 'w')
+        except:
+                exit(1, 'Could not open file %s\n' % outputFileName)
+                
+        # Log all SQL
+        db.set_sqlLogFunction(db.sqlLogAll)
 
-	# Set Log File Descriptor
-	db.set_sqlLogFD(diagFile)
+        # Set Log File Descriptor
+        db.set_sqlLogFD(diagFile)
 
-	diagFile.write('Start Date/Time: %s\n' % (mgi_utils.date()))
+        diagFile.write('Start Date/Time: %s\n' % (mgi_utils.date()))
         diagFile.write('Server: %s\n' % (db.get_sqlServer()))
         diagFile.write('Database: %s\n' % (db.get_sqlDatabase()))
-	diagFile.write('Input File: %s\n' % (inputFileName))
-	diagFile.write('Output File: %s\n' % (outputFileName))
+        diagFile.write('Input File: %s\n' % (inputFileName))
+        diagFile.write('Output File: %s\n' % (outputFileName))
 
-	errorFile.write('Start Date/Time: %s\n\n' % (mgi_utils.date()))
+        errorFile.write('Start Date/Time: %s\n\n' % (mgi_utils.date()))
 
 def processFile():
-	'''
-	# requires:
-	#
-	# effects:
-	#	Reads input file
-	#	Writes output file
-	#
-	# returns:
-	#	nothing
-	#
-	'''
+        '''
+        # requires:
+        #
+        # effects:
+        #	Reads input file
+        #	Writes output file
+        #
+        # returns:
+        #	nothing
+        #
+        '''
 
-	# For each line in the input file
+        # For each line in the input file
 
-	for line in inputFile.readlines():
+        for line in inputFile.readlines():
 
-		if line[0] == '!':
-			continue
+                if line[0] == '!':
+                        continue
 
-		tokens = string.split(line[:-1], delim)
+                tokens = string.split(line[:-1], delim)
 
-		try:
-			if parseType == 'Library':
-			    badName = tokens[0]
-			    goodName = tokens[2]
-			else:
-			    badName = tokens[1]
-			    goodName = tokens[2]
+                try:
+                        if parseType == 'Library':
+                            badName = tokens[0]
+                            goodName = tokens[2]
+                        else:
+                            badName = tokens[1]
+                            goodName = tokens[2]
 
-		except:
-			errorFile.write('Invalid line: %s\n' % (line))
-			continue
+                except:
+                        errorFile.write('Invalid line: %s\n' % (line))
+                        continue
 
-		if parseType == 'Tissues':
-		    results = db.sql('select _Tissue_key from PRB_Tissue where tissue = "%s"' % (goodName), 'auto')
-		elif parseType == 'Cell':
-		    results = db.sql('select term from VOC_Term where term = "%s"' % (goodName), 'auto')
-		elif parseType == 'Library':
-		    results = db.sql('select _Source_key from PRB_Source where name = "%s"' % (goodName), 'auto')
-		elif parseType == 'Strains':
-		    results = db.sql('select a.accID from PRB_Strain_Acc_View a, PRB_Strain s ' + \
-			'where s.strain = "%s" ' % (goodName) + \
-			'and s._Strain_key *= a._Object_key ' + \
-			'and a._LogicalDB_key = 1 ' + \
-			'and a.prefixPart = "MGI:" ' + \
-			'and a.preferred = 1', 'auto')
+                if parseType == 'Tissues':
+                    results = db.sql('select _Tissue_key from PRB_Tissue where tissue = "%s"' % (goodName), 'auto')
+                elif parseType == 'Cell':
+                    results = db.sql('select term from VOC_Term where term = "%s"' % (goodName), 'auto')
+                elif parseType == 'Library':
+                    results = db.sql('select _Source_key from PRB_Source where name = "%s"' % (goodName), 'auto')
+                elif parseType == 'Strains':
+                    results = db.sql('select a.accID from PRB_Strain_Acc_View a, PRB_Strain s ' + \
+                        'where s.strain = "%s" ' % (goodName) + \
+                        'and s._Strain_key *= a._Object_key ' + \
+                        'and a._LogicalDB_key = 1 ' + \
+                        'and a.prefixPart = "MGI:" ' + \
+                        'and a.preferred = 1', 'auto')
 
-		if len(results) > 0 and badName != goodName:
-			if parseType == 'strain':
-			  outputFile.write(mgi_utils.prvalue(results[0]['accID']) + delim + goodName + delim + badName + delim + createdBy + '\n')
-			else:
-			  outputFile.write(delim + goodName + delim + badName + delim + createdBy + '\n')
-		elif len(results) == 0:
-			errorFile.write('Invalid good name: %s\n' % (goodName))
+                if len(results) > 0 and badName != goodName:
+                        if parseType == 'strain':
+                          outputFile.write(mgi_utils.prvalue(results[0]['accID']) + delim + goodName + delim + badName + delim + createdBy + '\n')
+                        else:
+                          outputFile.write(delim + goodName + delim + badName + delim + createdBy + '\n')
+                elif len(results) == 0:
+                        errorFile.write('Invalid good name: %s\n' % (goodName))
 
 #	end of "for line in inputFile.readlines():"
 #

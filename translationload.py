@@ -1,5 +1,3 @@
-#!/usr/local/bin/python
-
 '''
 #
 # Purpose:
@@ -88,6 +86,7 @@
 import sys
 import os
 import string
+import subprocess
 import db
 import mgi_utils
 import loadlib
@@ -106,6 +105,8 @@ vocabName = os.environ['VOCABNAME']
 
 DEBUG = 0		# set DEBUG to false unless preview mode is selected
 
+BCP_COMMAND = os.getenv('PG_DBUTILS') + '/bin/bcpin.csh'
+
 inputFile = ''		# file descriptor
 diagFile = ''		# file descriptor
 errorFile = ''		# file descriptor
@@ -119,7 +120,7 @@ errorFileName = ''	# file name
 transTypeFileName = ''	# file name
 transFileName = ''	# file name
 
-bcpdelim = '\t'
+bcpdelim = '|'
 
 transTypeKey = 0	# primary key of translation type record
 mgiTypeKey = 0		# primary key of translation type mgi type
@@ -129,315 +130,330 @@ newTransType = 0	# flags whether to create new Trans Type record
 loaddate = loadlib.loaddate
 
 def exit(status, message = None):
-	'''
-	# requires: status, the numeric exit status (integer)
-	#           message (string)
-	#
-	# effects:
-	# Print message to stderr and exits
-	#
-	# returns:
-	#
-	'''
+        '''
+        # requires: status, the numeric exit status (integer)
+        #           message (string)
+        #
+        # effects:
+        # Print message to stderr and exits
+        #
+        # returns:
+        #
+        '''
  
-	if message is not None:
-		sys.stderr.write('\n' + str(message) + '\n')
+        if message is not None:
+                sys.stderr.write('\n' + str(message) + '\n')
  
-	try:
-		inputFile.close()
-		diagFile.write('\n\nEnd Date/Time: %s\n' % (mgi_utils.date()))
-		errorFile.write('\n\nEnd Date/Time: %s\n' % (mgi_utils.date()))
-		diagFile.close()
-		errorFile.close()
-		transTypeFile.close()
-		transFile.close()
-	except:
-		pass
+        try:
+                inputFile.close()
+                diagFile.write('\n\nEnd Date/Time: %s\n' % (mgi_utils.date()))
+                errorFile.write('\n\nEnd Date/Time: %s\n' % (mgi_utils.date()))
+                diagFile.close()
+                errorFile.close()
+                transTypeFile.close()
+                transFile.close()
+        except:
+                pass
 
-	db.useOneConnection()
-	sys.exit(status)
+        db.useOneConnection()
+        sys.exit(status)
 
 def init():
-	'''
-	# requires: 
-	#
-	# effects: 
-	# 1. Processes command line options
-	# 2. Initializes local DBMS parameters
-	# 3. Initializes global file descriptors/file names
-	# 4. Initializes global keys
-	#
-	# returns:
-	#
-	'''
+        '''
+        # requires: 
+        #
+        # effects: 
+        # 1. Processes command line options
+        # 2. Initializes local DBMS parameters
+        # 3. Initializes global file descriptors/file names
+        # 4. Initializes global keys
+        #
+        # returns:
+        #
+        '''
  
-	global inputFile, diagFile, errorFile, errorFileName, diagFileName
-	global transTypeFile, transFile
-	global transTypeFileName, transFileName
+        global inputFile, diagFile, errorFile, errorFileName, diagFileName
+        global transTypeFile, transFile
+        global transTypeFileName, transFileName
  
-	db.useOneConnection(1)
+        db.useOneConnection(1)
         db.set_sqlUser(user)
         db.set_sqlPasswordFromFile(passwordFileName)
 
-	# the default output file names are bases on 'inputFileName'
-	head, fileName = os.path.split(inputFileName)
-	# rename 'head'
-	head = outputFileDir 
-	fdate = mgi_utils.date('%m%d%Y')	# current date
+        # the default output file names are bases on 'inputFileName'
+        head, fileName = os.path.split(inputFileName)
+        # rename 'head'
+        head = outputFileDir 
+        fdate = mgi_utils.date('%m%d%Y')	# current date
 
-	diagFileName = head + '/' + fileName + '.' + fdate + '.diagnostics'
-	print diagFileName
+        diagFileName = head + '/' + fileName + '.' + fdate + '.diagnostics'
+        print(diagFileName)
         errorFileName = head + '/' + fileName + '.' + fdate + '.error'
-	print errorFileName
+        print(errorFileName)
         transTypeFileName = head + '/' + fileName + '.' + fdate + '.MGI_TranslationType.bcp'
-	print transTypeFileName
+        print(transTypeFileName)
         transFileName = head + '/' + fileName + '.' + fdate + '.MGI_Translation.bcp'
-	print transFileName
+        print(transFileName)
 
-	try:
-		inputFile = open(inputFileName, 'r')
-	except:
-		exit(1, 'Could not open file %s\n' % inputFileName)
-		
-	try:
-		diagFile = open(diagFileName, 'w')
-	except:
-		exit(1, 'Could not open file %s\n' % diagFileName)
-		
-	try:
-		errorFile = open(errorFileName, 'w')
-	except:
-		exit(1, 'Could not open file %s\n' % errorFileName)
-		
-	try:
-		transTypeFile = open(transTypeFileName, 'w')
-	except:
-		exit(1, 'Could not open file %s\n' % transTypeFileName)
-		
-	try:
-		transFile = open(transFileName, 'w')
-	except:
-		exit(1, 'Could not open file %s\n' % transFileName)
-		
-	# Log all SQL
-	db.set_sqlLogFunction(db.sqlLogAll)
+        try:
+                inputFile = open(inputFileName, 'r')
+        except:
+                exit(1, 'Could not open file %s\n' % inputFileName)
+                
+        try:
+                diagFile = open(diagFileName, 'w')
+        except:
+                exit(1, 'Could not open file %s\n' % diagFileName)
+                
+        try:
+                errorFile = open(errorFileName, 'w')
+        except:
+                exit(1, 'Could not open file %s\n' % errorFileName)
+                
+        try:
+                transTypeFile = open(transTypeFileName, 'w')
+        except:
+                exit(1, 'Could not open file %s\n' % transTypeFileName)
+                
+        try:
+                transFile = open(transFileName, 'w')
+        except:
+                exit(1, 'Could not open file %s\n' % transFileName)
+                
+        # Log all SQL
+        db.set_sqlLogFunction(db.sqlLogAll)
 
-	# Set Log File Descriptor
-	db.set_sqlLogFD(diagFile)
+        # Set Log File Descriptor
+        #db.set_sqlLogFD(diagFile)
+        db.set_commandLogFile(diagFileName) 
 
-	diagFile.write('Start Date/Time: %s\n' % (mgi_utils.date()))
+        diagFile.write('Start Date/Time: %s\n' % (mgi_utils.date()))
         diagFile.write('Server: %s\n' % (db.get_sqlServer()))
         diagFile.write('Database: %s\n' % (db.get_sqlDatabase()))
-	diagFile.write('Input File: %s\n' % (inputFileName))
+        diagFile.write('Input File: %s\n' % (inputFileName))
 
-	errorFile.write('Start Date/Time: %s\n\n' % (mgi_utils.date()))
+        errorFile.write('Start Date/Time: %s\n\n' % (mgi_utils.date()))
 
 def verifyMode():
-	'''
-	# requires:
-	#
-	# effects:
-	#	Verifies the processing mode is valid.  If it is not valid,
-	#	the program is aborted.
-	#	Sets globals based on processing mode.
-	#	Deletes data based on processing mode.
-	#
-	# returns:
-	#	nothing
-	#
-	'''
+        '''
+        # requires:
+        #
+        # effects:
+        #	Verifies the processing mode is valid.  If it is not valid,
+        #	the program is aborted.
+        #	Sets globals based on processing mode.
+        #	Deletes data based on processing mode.
+        #
+        # returns:
+        #	nothing
+        #
+        '''
 
-	global DEBUG
+        global DEBUG
 
-	if mode == 'preview':
-		DEBUG = 1
-	elif mode not in ['fullest', 'full']:
-		exit(1, 'Invalid Processing Mode:  %s\n' % (mode))
+        if mode == 'preview':
+                DEBUG = 1
+        elif mode not in ['fullest', 'full', 'add']:
+                exit(1, 'Invalid Processing Mode:  %s\n' % (mode))
 
 def processTranslationType():
-	'''
-	# requires:
-	#
-	# effects:
-	#	checks if a TranslationType record exists
-	#	if yes and mode == 'fullest', delete it and add a new record
-	#	if yes and mode == 'full', delete existing translations of that translation type
-	#	if no, creates a new one
-	#	sets global transTypeKey, mgiTypeKey, vocabKey
-	#
-	# returns:
-	#
-	'''
+        '''
+        # requires:
+        #
+        # effects:
+        #	checks if a TranslationType record exists
+        #	if yes and mode == 'fullest', delete it and add a new record
+        #	if yes and mode == 'full', delete existing translations of that translation type
+        #       if yes and mode == 'add', do not delete anything, add what is in the file to that translationtype
+        #	if no, creates a new one
+        #	sets global transTypeKey, mgiTypeKey, vocabKey
+        #
+        # returns:
+        #
+        '''
 
-	global transTypeKey, mgiTypeKey, vocabKey, newTransType
+        global transTypeKey, mgiTypeKey, vocabKey, newTransType
 
-	newTransType = 0
+        newTransType = 0
 
-	results = db.sql('select _TranslationType_key, _MGIType_key from MGI_TranslationType ' + \
-		'where translationType = "%s" ' % (transTypeName), 'auto')
+        results = db.sql('''select _TranslationType_key, _MGIType_key 
+                        from MGI_TranslationType 
+                        where translationType = '%s' ''' % (transTypeName), 'auto')
 
-	# if Translation Type exists....
+        # if Translation Type exists....
 
-	if len(results) > 0:
+        if len(results) > 0:
 
-		transTypeKey = results[0]['_TranslationType_key']
-		mgiTypeKey = results[0]['_MGIType_key']
+                transTypeKey = results[0]['_TranslationType_key']
+                mgiTypeKey = results[0]['_MGIType_key']
 
-	        # delete any existing translation type record
-	        if mode == 'fullest':
-		    db.sql('delete from MGI_TranslationType where _TranslationType_key = %s' % (transTypeKey), None, execute = not DEBUG)
-		    newTransType = 1
+                # delete any existing translation type record
+                if mode == 'fullest':
+                    db.sql('delete from MGI_TranslationType where _TranslationType_key = %s' % (transTypeKey), None, execute = not DEBUG)
+                    newTransType = 1
 
-	        # delete any existing translation records (but leave translation type alone)
-		elif mode == 'full':
-		    db.sql('delete from MGI_Translation where _TranslationType_key = %s' % (transTypeKey), None, execute = not DEBUG)
+                # delete any existing translation records (but leave translation type alone)
+                elif mode == 'full':
+                    db.sql('delete from MGI_Translation where _TranslationType_key = %s' % (transTypeKey), None, execute = not DEBUG)
 
-	# else, create a new Translation Type
+        # else, create a new Translation Type
 
-	else:
-	    newTransType = 1
-
-	if newTransType:
-
-		results = db.sql('select maxKey = max(_TranslationType_key) + 1 from MGI_TranslationType', 'auto')
-		transTypeKey = results[0]['maxKey']
-		if transTypeKey is None:
-			transTypeKey = 1000
-
-		results = db.sql('select _MGIType_key from ACC_MGIType where name = "%s"' % (transMGIType), 'auto')
-		mgiTypeKey = results[0]['_MGIType_key']
-
-		newTransType = 1
-
-	results = db.sql('select _Vocab_key from VOC_Vocab where name = "%s"' % (vocabName), 'auto')
-	if len(results) > 0:
-	    vocabKey = results[0]['_Vocab_key']
         else:
-	    vocabKey = 0
+            newTransType = 1
+
+        if newTransType:
+
+                results = db.sql('''select max(_TranslationType_key) + 1 as maxKey 
+                        from MGI_TranslationType''', 'auto')
+                transTypeKey = results[0]['maxKey']
+                if transTypeKey is None:
+                        transTypeKey = 1000
+
+                results = db.sql('''select _MGIType_key from ACC_MGIType where name  = '%s' ''' % (transMGIType), 'auto')
+                mgiTypeKey = results[0]['_MGIType_key']
+
+                newTransType = 1
+
+        results = db.sql('''select _Vocab_key 
+                from VOC_Vocab where name = '%s' ''' % (vocabName), 'auto')
+        if len(results) > 0:
+            vocabKey = results[0]['_Vocab_key']
+        else:
+            vocabKey = 0
 
 def processFile():
-	'''
-	# requires:
-	#
-	# effects:
-	#	Reads input file
-	#	Verifies and Processes each line in the input file
-	#
-	# returns:
-	#	nothing
-	#
-	'''
+        '''
+        # requires:
+        #
+        # effects:
+        #	Reads input file
+        #	Verifies and Processes each line in the input file
+        #
+        # returns:
+        #	nothing
+        #
+        '''
 
-	results = db.sql('select maxKey = max(_Translation_key) + 1 from MGI_Translation', 'auto')
-	transKey = results[0]['maxKey']
-	if transKey is None:
-		transKey = 1000
+        results = db.sql('''select max(_Translation_key) + 1 as maxKey
+                from MGI_Translation''', 'auto')
+        transKey = results[0]['maxKey']
+        if transKey is None:
+                transKey = 1000
 
-	lineNum = 0
+        lineNum = 0
 
-	# sequence number of bad name in translation list
-	seq = 1
+        # sequence number of bad name in translation list
+        seq = 1
 
-	# For each line in the input file
+        # For each line in the input file
 
-	for line in inputFile.readlines():
+        for line in inputFile.readlines():
 
-		error = 0
-		lineNum = lineNum + 1
+                error = 0
+                lineNum = lineNum + 1
 
-		# Split the line into tokens
-		tokens = string.split(line[:-1], '\t')
+                # Split the line into tokens
+                tokens = str.split(line[:-1], '\t')
 
-		try:
-			objectID = tokens[0]
-			objectDescription = tokens[1]
-			term = tokens[2]
-			userID = tokens[3]
-		except:
-			exit(1, 'Invalid Line (%d): %s\n' % (lineNum, line))
-			continue
+                try:
+                        objectID = tokens[0]
+                        objectDescription = tokens[1]
+                        term = tokens[2]
+                        userID = tokens[3]
+                except:
+                        exit(1, 'Invalid Line (%d): %s\n' % (lineNum, line))
+                        continue
 
-		if vocabKey > 0:
-		    objectKey = loadlib.verifyTerm(objectID, vocabKey, objectDescription, lineNum, errorFile)
-		else:
-		    objectKey = loadlib.verifyObject(objectID, mgiTypeKey, objectDescription, lineNum, errorFile)
+                if vocabKey > 0:
+                    objectKey = loadlib.verifyTerm(objectID, vocabKey, objectDescription, lineNum, errorFile)
+                else:
+                    objectKey = loadlib.verifyObject(objectID, mgiTypeKey, objectDescription, lineNum, errorFile)
 
-		userKey = loadlib.verifyUser(userID, lineNum, errorFile)
+                userKey = loadlib.verifyUser(userID, lineNum, errorFile)
 
-		if objectKey == 0 or userKey == 0:
-			# set error flag to true
-			error = 1
+                if objectKey == 0 or userKey == 0:
+                        # set error flag to true
+                        error = 1
 
-		# if errors, continue to next record
-		if error:
-			continue
+                # if errors, continue to next record
+                if error:
+                        continue
 
-		# if no errors, process
+                # if no errors, process
 
-		# add term to translation file
-		bcpWrite(transFile, [transKey, transTypeKey, objectKey, term, seq, userKey, userKey, loaddate, loaddate])
-		transKey = transKey + 1
-		seq = seq + 1
+                # add term to translation file
+                bcpWrite(transFile, [transKey, transTypeKey, objectKey, term, seq, userKey, userKey, loaddate, loaddate])
+                transKey = transKey + 1
+                seq = seq + 1
 
 #	end of "for line in inputFile.readlines():"
 
-	if newTransType:
-		bcpWrite(transTypeFile, [transTypeKey, mgiTypeKey, vocabKey, transTypeName, transCompression, 0, userKey, userKey, loaddate, loaddate])
+        if newTransType:
+                bcpWrite(transTypeFile, [transTypeKey, mgiTypeKey, vocabKey, transTypeName, transCompression, 0, userKey, userKey, loaddate, loaddate])
 
 def bcpWrite(fp, values):
-	'''
-	#
-	# requires:
-	#	fp; file pointer of bcp file
-	#	values; list of values
-	#
-	# effects:
-	#	converts each value item to a string and writes out the values
-	#	to the bcpFile using the appropriate delimiter
-	#
-	# returns:
-	#	nothing
-	#
-	'''
+        '''
+        #
+        # requires:
+        #	fp; file pointer of bcp file
+        #	values; list of values
+        #
+        # effects:
+        #	converts each value item to a string and writes out the values
+        #	to the bcpFile using the appropriate delimiter
+        #
+        # returns:
+        #	nothing
+        #
+        '''
 
-	# convert all members of values to strings
-	strvalues = []
-	for v in values:
-		strvalues.append(str(v))
+        # convert all members of values to strings
+        strvalues = []
+        for v in values:
+                strvalues.append(str(v))
 
-	fp.write('%s\n' % (string.join(strvalues, bcpdelim)))
+        #fp.write('%s\n' % (str.join(strvalues, bcpdelim)))
+        fp.write('%s\n' % (bcpdelim.join(strvalues)))
 
 def bcpFiles():
-	'''
-	# requires:
-	#
-	# effects:
-	#	BCPs the data into the database
-	#
-	# returns:
-	#	nothing
-	#
-	'''
+        '''
+        # requires:
+        #
+        # effects:
+        #	BCPs the data into the database
+        #
+        # returns:
+        #	nothing
+        #
+        '''
 
-	transTypeFile.close()
-	transFile.close()
+        transTypeFile.close()
+        transFile.close()
 
-	cmd1 = 'cat %s | bcp %s..%s in %s -c -t\"%s" -S%s -U%s' \
-		% (passwordFileName, db.get_sqlDatabase(), \
-	   	'MGI_TranslationType', transTypeFileName, bcpdelim, db.get_sqlServer(), db.get_sqlUser())
+        bcpI = '%s %s %s' % (BCP_COMMAND, db.get_sqlServer(), db.get_sqlDatabase())
+        bcpII = '"|" "\\n" mgd'
 
-	cmd2 = 'cat %s | bcp %s..%s in %s -c -t\"%s" -S%s -U%s' \
-		% (passwordFileName, db.get_sqlDatabase(), \
-	   	'MGI_Translation', transFileName, bcpdelim, db.get_sqlServer(), db.get_sqlUser())
+        bcp1 = '%s %s "/" %s %s' % (bcpI, 'MGI_TranslationType', transTypeFileName, bcpII)
+        bcp2  = '%s %s "/" %s %s' % (bcpI, 'MGI_Translation', transFileName, bcpII)
 
-	diagFile.write('%s\n' % cmd1)
-	diagFile.write('%s\n' % cmd2)
+        diagFile.write('%s\n' % bcp1)
+        diagFile.write('%s\n' % bcp2)
 
-	if DEBUG:
-		return
+        if DEBUG:
+                return
 
-	os.system(cmd1)
-	os.system(cmd2)
+        for bcpCmd in [bcp1, bcp2]:
+            diagFile.write('%s\n' % bcpCmd)
+            result = subprocess.run(bcpCmd, shell=True, capture_output=True, text=True)
+            stdout = result.stdout
+            stderr = result.stderr
+            statusCode = result.returncode
+            if statusCode != 0:
+                msg = '%s statusCode: %s stderr: %s\n' % (bcpCmd, statusCode, stderr)
+                diagFile.write(msg)
+                return statusCode
+
+        return statusCode
 
 #
 # Main

@@ -16,9 +16,10 @@ touch ${TRANSLOG}
 date >& ${TRANSLOG}
 
 # print the environment to the log
-env | pg | sort >>& ${TRANSLOG}
+env | sort >>& ${TRANSLOG}
+echo "invoking translationload.py"
 
-${TRANSLATIONLOAD}/translationload.py >>& ${TRANSLOG}
+${PYTHON} ${TRANSLATIONLOAD}/translationload.py >>& ${TRANSLOG}
 
 date >>& ${TRANSLOG}
 
