@@ -33,6 +33,8 @@
 #		preview - perform all record verifications but do not load the data or
 #		          make any changes to the database.  
 #			  used for testing or to preview the load.
+#               add - do not delete existing Translations, add translations to the Translation Type, 
+#                       starting with the next available seqNum
 #
 # Output:
 #
@@ -49,6 +51,7 @@
 #	1. Verify Mode.
 #		if mode = fullest: delete MGI_TranslationType records
 #		if mode = full: delete MGI_Translation records
+#               if mode = add: do not delete anything
 #		if mode = preview:  set "DEBUG" to True
 #
 #	2.  Verify the Translation Type.
@@ -73,6 +76,8 @@
 #	2.  Create MGI_Translation record for the MGI object.
 #
 # History:
+#
+# sc    07/17/2023 - update to latest postgres and python - add 'add' mode
 #
 # lec	03/21/2006
 # lec	03/21/2006
@@ -128,6 +133,10 @@ vocabKey = 0		# primary key of translation's vocabulary
 newTransType = 0	# flags whether to create new Trans Type record
 
 loaddate = loadlib.loaddate
+
+# sequence number of bad name in translation list
+# if 'add' mode, this is reset to max(sequenceNum) + 1
+seqNum = 1
 
 def exit(status, message = None):
         '''
@@ -272,7 +281,7 @@ def processTranslationType():
         #
         '''
 
-        global transTypeKey, mgiTypeKey, vocabKey, newTransType
+        global transTypeKey, mgiTypeKey, vocabKey, newTransType, seqNum
 
         newTransType = 0
 
@@ -296,6 +305,11 @@ def processTranslationType():
                 elif mode == 'full':
                     db.sql('delete from MGI_Translation where _TranslationType_key = %s' % (transTypeKey), None, execute = not DEBUG)
 
+                # get the max sequence number
+                elif mode == 'add':
+                    results = db.sql('''select max(sequenceNum)as maxSeq from MGI_Translation''' , 'auto')
+                    seqNum = results[0]['maxSeq'] + 1
+                    print('seqNum: %s' % seqNum)
         # else, create a new Translation Type
 
         else:
@@ -334,6 +348,8 @@ def processFile():
         #
         '''
 
+        global seqNum
+
         results = db.sql('''select max(_Translation_key) + 1 as maxKey
                 from MGI_Translation''', 'auto')
         transKey = results[0]['maxKey']
@@ -341,9 +357,6 @@ def processFile():
                 transKey = 1000
 
         lineNum = 0
-
-        # sequence number of bad name in translation list
-        seq = 1
 
         # For each line in the input file
 
@@ -382,9 +395,9 @@ def processFile():
                 # if no errors, process
 
                 # add term to translation file
-                bcpWrite(transFile, [transKey, transTypeKey, objectKey, term, seq, userKey, userKey, loaddate, loaddate])
+                bcpWrite(transFile, [transKey, transTypeKey, objectKey, term, seqNum, userKey, userKey, loaddate, loaddate])
                 transKey = transKey + 1
-                seq = seq + 1
+                seqNum = seqNum + 1
 
 #	end of "for line in inputFile.readlines():"
 

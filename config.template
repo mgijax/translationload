@@ -12,9 +12,9 @@ endif
 
 source ${MGICONFIG}/master.config.csh
 
-# fullest, full, or preview - see translationload.py
+# fullest, full, add or preview - see translationload.py
 # for explanation
-setenv TRANSMODE	load
+setenv TRANSMODE	?
 
 # Output data directory, often a TR directory
 setenv TRANSDATADIR	?

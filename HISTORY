@@ -1,9 +1,11 @@
+TAG: translationload-6-0-22-2
 TAG: translationload-6-0-22-1
 DATE: 07/14/2023
 STAFF: sc
 CHANGES: wts2-1218 - add more strain translations
 1) Updated postgres and python
 2) Added 'add' mode to add to existing translation
+2b) this includes starting at max(sequenceNum) + 1
 
 TAG: translationload-4-3-2-2
 TAG: translationload-4-3-2-1
